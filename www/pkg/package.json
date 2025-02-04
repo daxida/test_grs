@@ -1,0 +1,15 @@
+{
+  "name": "test_grs",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "test_grs_bg.wasm",
+    "test_grs.js",
+    "test_grs.d.ts"
+  ],
+  "main": "test_grs.js",
+  "types": "test_grs.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

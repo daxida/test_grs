@@ -12,10 +12,11 @@
     <p id="result"></p>
 
     <script type="module">
-        import init, { check_spelling, log_message } from "./pkg/greek_spell_checker.js";
+        import init, { check_spelling } from "./pkg/test_grs.js";
 
         async function run() {
             await init();  // Load WASM
+            window.checkWord = checkWord; // Expose globally
         }
 
         function checkWord() {
