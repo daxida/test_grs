@@ -1,28 +1,83 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greek Spell Checker</title>
+    <title>GRS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .editor {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            outline: none;
+            text-align: left;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .underline {
+            text-decoration: underline;
+            color: red;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            color: black;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Greek Spell Checker</h1>
-    <input type="text" id="wordInput" placeholder="Enter a Greek word">
-    <button onclick="checkWord()">Check</button>
-    <p id="result"></p>
-
+    <h2>GRS</h2>
+    <div id="editor" class="editor" contenteditable="true" placeholder="Type text here..."></div>
+    <button onclick="highlightErrors()">Highlight Errors</button>
+    
     <script type="module">
-        import init, { check_spelling } from "./pkg/test_grs.js";
+        import init, { scan_text } from "./pkg/test_grs.js"; // Load WebAssembly module
 
         async function run() {
-            await init();  // Load WASM
-            window.checkWord = checkWord; // Expose globally
+            await init(); // Initialize WASM
+            window.highlightErrors = highlightErrors;
         }
 
-        function checkWord() {
-            let word = document.getElementById("wordInput").value;
-            let result = check_spelling(word);
-            document.getElementById("result").innerText = result ? "Correct!" : "Incorrect!";
+        function highlightErrors() {
+            let editor = document.getElementById("editor");
+            let text = editor.innerText;
+            editor.innerHTML = "";
+
+            let positions = scan_text(text); // Call WASM function
+            let highlightedText = "";
+            let lastIndex = 0;
+
+            for (let i = 0; i < positions.length; i++) {
+                let start = positions[i][0];
+                let end = positions[i][1];
+
+                highlightedText += text.substring(lastIndex, start);
+                highlightedText += `<span class='underline'>${text.substring(start, end)}</span>`;
+                lastIndex = end;
+            }
+            highlightedText += text.substring(lastIndex);
+            
+            editor.innerHTML = highlightedText.replace(/\n/g, '<br>');
         }
 
         run();

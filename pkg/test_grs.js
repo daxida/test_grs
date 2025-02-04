@@ -74,23 +74,14 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 /**
- * @param {string} word
- * @returns {boolean}
+ * @param {string} text
+ * @returns {Array<any>}
  */
-export function check_spelling(word) {
-    const ptr0 = passStringToWasm0(word, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+export function scan_text(text) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.check_spelling(ptr0, len0);
-    return ret !== 0;
-}
-
-/**
- * @param {string} message
- */
-export function log_message(message) {
-    const ptr0 = passStringToWasm0(message, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    wasm.log_message(ptr0, len0);
+    const ret = wasm.scan_text(ptr0, len0);
+    return ret;
 }
 
 async function __wbg_load(module, imports) {
@@ -127,8 +118,13 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_log_c222819a41e063d3 = function(arg0) {
-        console.log(arg0);
+    imports.wbg.__wbg_new_78feb108b6472713 = function() {
+        const ret = new Array();
+        return ret;
+    };
+    imports.wbg.__wbg_push_737cfc8c1432c2c6 = function(arg0, arg1) {
+        const ret = arg0.push(arg1);
+        return ret;
     };
     imports.wbg.__wbindgen_init_externref_table = function() {
         const table = wasm.__wbindgen_export_0;
@@ -140,8 +136,8 @@ function __wbg_get_imports() {
         table.set(offset + 3, false);
         ;
     };
-    imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
-        const ret = getStringFromWasm0(arg0, arg1);
+    imports.wbg.__wbindgen_number_new = function(arg0) {
+        const ret = arg0;
         return ret;
     };
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {

@@ -1,14 +1,12 @@
 /* tslint:disable */
 /* eslint-disable */
-export function check_spelling(word: string): boolean;
-export function log_message(message: string): void;
+export function scan_text(text: string): Array<any>;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly check_spelling: (a: number, b: number) => number;
-  readonly log_message: (a: number, b: number) => void;
+  readonly scan_text: (a: number, b: number) => any;
   readonly __wbindgen_export_0: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
