@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greek Spell Checker</title>
+</head>
+<body>
+    <h1>Greek Spell Checker</h1>
+    <input type="text" id="wordInput" placeholder="Enter a Greek word">
+    <button onclick="checkWord()">Check</button>
+    <p id="result"></p>
+
+    <script type="module">
+        import init, { check_spelling, log_message } from "./pkg/greek_spell_checker.js";
+
+        async function run() {
+            await init();  // Load WASM
+        }
+
+        function checkWord() {
+            let word = document.getElementById("wordInput").value;
+            let result = check_spelling(word);
+            document.getElementById("result").innerText = result ? "Correct!" : "Incorrect!";
+        }
+
+        run();
+    </script>
+</body>
+</html>
