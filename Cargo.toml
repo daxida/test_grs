@@ -7,6 +7,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+grs = { path = "../grs" }
 wasm-bindgen = "0.2"
 web-sys = { version = "0.3", features = ["console"] }
 
