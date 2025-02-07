@@ -26,7 +26,6 @@
             background-color: #f9f9f9;
         }
         .underline {
-            text-decoration: underline;
             color: red;
             font-weight: bold;
         }
@@ -87,6 +86,12 @@
                 let start = diagnostic.start;
                 let end = diagnostic.end;
                 let kind = diagnostic.kind;
+
+                // HACK: Since tokens have surrounding whitespace, to get the precise
+                // range we may have to substract one from the end
+                if (end > 0 && text[end - 1] === ' ') {
+                    end -= 1;
+                }
 
                 highlightedText += text.substring(lastIndex, start);
                 highlightedText += `<span class='underline' title='${kind}'>${text.substring(start, end)}</span>`;
