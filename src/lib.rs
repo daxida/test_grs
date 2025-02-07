@@ -2,7 +2,7 @@ use grs::linter::check;
 use grs::registry::Rule;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
-use web_sys::js_sys::Array;
+use web_sys::js_sys::{Array, Object, Reflect};
 
 // TODO: Very unefficient
 fn byte_range_to_char_range(
@@ -32,24 +32,29 @@ fn byte_range_to_char_range(
 pub fn scan_text(text: &str) -> Array {
     let config = vec![Rule::MissingDoubleAccents];
     let diagnostics = check(text, &config);
+    let diagnostics_js = Array::new();
 
-    let errors = Array::new();
     for diagnostic in diagnostics {
-        let error_range = Array::new();
         if let Some(fix) = diagnostic.fix {
-            let _byte_range = fix.range;
-            let byte_range = _byte_range.start().._byte_range.end();
-            // TODO: Very unefficient
+            let kind = JsValue::from(diagnostic.kind.to_string());
+            let replacement = JsValue::from(fix.replacement);
+
+            let byte_range = fix.range.start()..fix.range.end();
             let char_range = byte_range_to_char_range(text, byte_range);
             let start = JsValue::from(char_range.start);
             let end = JsValue::from(char_range.end);
-            error_range.push(&start);
-            error_range.push(&end);
+
+            let diagnostic_js = Object::new();
+            Reflect::set(&diagnostic_js, &JsValue::from("kind"), &kind).unwrap();
+            Reflect::set(&diagnostic_js, &JsValue::from("replacement"), &replacement).unwrap();
+            Reflect::set(&diagnostic_js, &JsValue::from("start"), &start).unwrap();
+            Reflect::set(&diagnostic_js, &JsValue::from("end"), &end).unwrap();
+
+            diagnostics_js.push(&diagnostic_js);
         }
-        errors.push(&error_range);
     }
 
-    errors
+    diagnostics_js
 }
 
 #[cfg(test)]
@@ -58,10 +63,6 @@ mod tests {
 
     #[test]
     fn test_range_conversion() {
-        let text = "Καλημέρα";
-        //          02468
-        let byte_range = 0..8;
-        let char_range = byte_range_to_char_range(text, byte_range);
-        assert_eq!(char_range, 0..4);
+        assert_eq!(0..4, byte_range_to_char_range("Καλημέρα", 0..8));
     }
 }

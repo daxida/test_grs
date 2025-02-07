@@ -79,20 +79,20 @@
             let text = editor.innerText;
             editor.innerHTML = "";
 
-            let positions = scan_text(text); // Call WASM function
+            let diagnostics = scan_text(text); // Call WASM function
             let highlightedText = "";
             let lastIndex = 0;
 
-            for (let i = 0; i < positions.length; i++) {
-                let start = positions[i][0];
-                let end = positions[i][1];
+            for (const diagnostic of diagnostics) {
+                let start = diagnostic.start;
+                let end = diagnostic.end;
+                let kind = diagnostic.kind;
 
                 highlightedText += text.substring(lastIndex, start);
-                highlightedText += `<span class='underline'>${text.substring(start, end)}</span>`;
+                highlightedText += `<span class='underline' title='${kind}'>${text.substring(start, end)}</span>`;
                 lastIndex = end;
             }
             highlightedText += text.substring(lastIndex);
-            
             editor.innerHTML = highlightedText.replace(/\n/g, '<br>');
         }
 
