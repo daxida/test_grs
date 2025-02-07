@@ -30,7 +30,11 @@ fn byte_range_to_char_range(
 
 #[wasm_bindgen]
 pub fn scan_text(text: &str) -> Array {
-    let config = vec![Rule::MissingDoubleAccents];
+    let config = vec![
+        Rule::MissingDoubleAccents,
+        Rule::AmbiguousChar,
+        Rule::OutdatedSpelling,
+    ];
     let diagnostics = check(text, &config);
     let diagnostics_js = Array::new();
 
