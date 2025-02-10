@@ -1,113 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <title>GRS</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            text-align: center;
-        }
-        .editor {
-            width: 100%;
-            min-height: 150px;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            outline: none;
-            text-align: left;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-        .underline {
-            color: red;
-            font-weight: bold;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-            color: black;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #f0f0f0;
-        }
-    </style>
-</head>
-<body>
-    <h2>GRS</h2>
-    <div id="editor" class="editor" contenteditable="true" placeholder="Type text here..."></div>
-    <button onclick="highlightErrors()">Highlight Errors</button>
-    
-    <script type="module">
-        import init, { scan_text } from "./pkg/grs_wasm.js"; // Load WebAssembly module
-
-        async function run() {
-            await init(); // Initialize WASM
-            window.highlightErrors = highlightErrors;
-
-            // For testing, delete me later on
-            const editor = document.getElementById("editor");
-            const placeholderText = `MDA: παλιοκατσάρια μου;
-AC : Το ανασυνδυασµένος...
-OS : κατά κακή μου τύχη, εξ αιτίας των περιστάσεων...
-MA : ―Μὴ σᾶς ἔπεσε κανένα κομπόδεμα!; Τί λογῆς ἦτον, καὶ πόσα λεφτὰ εἶχε […]
-AFN: {{μτφ-αρχή|όρος (στη Ορολογία)}}
-MAC: […] γράψιμο των λέξεων (έως τα Χγεννα), τότε θ'αρχίσουμε να βάζουμε και […]
-RFN: […] φρικώδη συνοδίαν ὀρχουμένην μανιωδῶς περὶ την γηραιὰν κεφαλήν του, γύρω εἰς τὴν […]
-
-RFN: ―Πιάστε την!… Πιάστε την! Μᾶς ἔκαμε φονικό!
-MDA: […] Ἐκεῖ θὰ ἐξωμολογεῖτο ὅλα τὰ «πάθια της».
-MDA: […] ὀπίσω, τὰς φθαρμένας ἐμβάδας, «τὰ παλιοκατσάρια της», καὶ ξυπόλυτη ἀνερριχήθη ἐπάνω εἰς […]
-MDA: […] τὰ βουνά, ἅπλωνε τὰ ἀτελείωτα σινδόνια της.
-MDA: […] καταστρέψει καὶ τ᾿ ἄλλα γείτονα ἀδέλφια του.
-MDA: […] τινάζει εἰς τὴν θάλασσαν τὰ σινδόνια της.
-`;
-            editor.innerText = placeholderText;
-        }
-
-        function highlightErrors() {
-            let editor = document.getElementById("editor");
-            let text = editor.innerText;
-            editor.innerHTML = "";
-
-            let diagnostics = scan_text(text); // Call WASM function
-            let highlightedText = "";
-            let lastIndex = 0;
-
-            // Unsure as of why this is not true already
-            diagnostics.sort((a, b) => a.start - b.start);
-
-            for (const diagnostic of diagnostics) {
-                let start = diagnostic.start;
-                let end = diagnostic.end;
-                let kind = diagnostic.kind;
-
-                // HACK: Since tokens have surrounding whitespace, to get the precise
-                // range we may have to substract one from the end
-                if (end > 0 && text[end - 1] === ' ') {
-                    end -= 1;
-                }
-
-                highlightedText += text.substring(lastIndex, start);
-                highlightedText += `<span class='underline' title='${kind}'>${text.substring(start, end)}</span>`;
-                lastIndex = end;
-            }
-            highlightedText += text.substring(lastIndex);
-            editor.innerHTML = highlightedText.replace(/\n/g, '<br>');
-        }
-
-        run();
-    </script>
-</body>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
