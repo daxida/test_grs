@@ -22,7 +22,7 @@ export default function App() {
   }, [text]);
 
   return (
-    <main className="flex flex-col h-full bg-ayu-background dark:bg-ayu-background-dark">
+    <main className="flex flex-col h-full bg-ayu-background dark:bg-ayu-background-dark text-gray-900 dark:text-white">
       <Header
         theme={theme}
         onChangeTheme={setTheme}

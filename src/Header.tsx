@@ -30,9 +30,10 @@ export default function Header({
         "dark:bg-galaxy",
       )}
     >
-      GRS
+      <div className="text-3xl"> GRS </div>
       <div className="flex items-center min-w-0">
         <RepoButton />
+        <Divider />
         <ThemeButton theme={theme} onChangeTheme={onChangeTheme} />
       </div>
     </div>
@@ -53,5 +54,11 @@ function ThemeButton({
     >
       {theme === "light" ? "Dark Mode" : "Light Mode"}
     </button>
+  );
+}
+
+function Divider() {
+  return (
+    <div className="hidden sm:block mx-6 lg:mx-4 w-px h-8 bg-gray-200 dark:bg-gray-700" />
   );
 }
