@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useRef } from 'react'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 import init, { scan_text } from './../pkg/grs_wasm.js'
@@ -8,18 +8,20 @@ import { Panel, PanelGroup } from "react-resizable-panels";
 import { useTheme } from './theme.js';
 
 export default function App() {
+  const initPromise = useRef<null | Promise<void>>(null);
   const [text, setText] = useState(DEFAULT_PROMPT);
-  const [highlightedText, setHighlightedText] = useState("");
   const [theme, setTheme] = useTheme();
 
-  useEffect(() => {
-    async function initializeWasm() {
-      await init();
-      // Highlight errors after initialization
-      highlightErrors(text, setHighlightedText);
-    }
-    initializeWasm();
-  }, [text]);
+  if (initPromise.current == null) {
+    initPromise.current = startApp()
+      .then(({ text, settings }) => {
+        setText(text);
+        highlightErrors(text, setText);
+      })
+      .catch((error) => {
+        console.error("Failed to initialize playground.", error);
+      });
+  }
 
   return (
     <main className="flex flex-col h-full bg-ayu-background dark:bg-ayu-background-dark text-gray-900 dark:text-white">
@@ -32,59 +34,59 @@ export default function App() {
         <Editor
           text={text}
           setText={setText}
-          highlightedText={highlightedText}
-          setHighlightedText={setHighlightedText}
         />
       </div>
     </main>
   );
 }
 
-function highlightErrors(inputText: string, setHighlightedText: (text: string) => void) {
-  const diagnostics = scan_text(inputText);
+async function startApp(): Promise<{
+  text: string;
+  settings: string;
+}> {
+  await init(); // Init wasm
+  return {
+    text: DEFAULT_PROMPT,
+    settings: "Unused at the moment. TODO: fixme"
+  };
+}
+
+function highlightErrors(text: string, setText: (text: string) => void) {
+  const diagnostics = scan_text(text);
   diagnostics.sort((a, b) => a.start - b.start);
 
   let lastIndex = 0;
-  let newHighlightedText = "";
+  let newText = "";
 
-  for (const diagnostic of diagnostics) {
-    const { start, end, kind } = diagnostic;
-    const newEnd = end > 0 && inputText[end - 1] == " " ? end - 1 : end;
-
-    newHighlightedText += inputText.substring(lastIndex, start);
-    newHighlightedText += `<span class='underline' title='${kind}'>${inputText.substring(start, newEnd)}</span>`;
+  for (const { start, end, kind } of diagnostics) {
+    const newEnd = end > 0 && text[end - 1] == " " ? end - 1 : end;
+    newText += text.substring(lastIndex, start);
+    newText += `<span class='underline' title='${kind}'>${text.substring(start, newEnd)}</span>`;
     lastIndex = newEnd;
   }
 
-  newHighlightedText += inputText.substring(lastIndex);
-  setHighlightedText(newHighlightedText.replace(/\n/g, "<br>"));
+  newText += text.substring(lastIndex);
+  setText(newText.replace(/\n/g, "<br>"));
 };
 
 interface EditorProps {
   text: string;
   setText: (text: string) => void;
-  highlightedText: string;
-  setHighlightedText: (text: string) => void;
 }
 
-function Editor({ text, setText, highlightedText, setHighlightedText }: EditorProps) {
-  const onBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    const newText = e.target.innerText;
-    setText(newText);
-    highlightErrors(newText, setHighlightedText);
-  };
-
+function Editor({ text, setText }: EditorProps) {
   return (
-    <>
-      <PanelGroup direction="horizontal" autoSaveId="main">
-        <Panel id="main" order={0} minSize={10}>
+    <PanelGroup direction="horizontal" autoSaveId="main">
+
+      <Panel id="main" order={0} minSize={10}>
+        <PanelGroup id="main" direction="vertical">
           <div
             id="editor"
             className="editor"
             contentEditable
             suppressContentEditableWarning
-            onBlur={onBlur}
-            dangerouslySetInnerHTML={{ __html: highlightedText || text.replace(/\n/g, "<br>") }}
+            onBlur={(e) => highlightErrors(e.target.innerText, setText)}
+            dangerouslySetInnerHTML={{ __html: text || text.replace(/\n/g, "<br>") }}
           />
           <Panel
             id="diagnostics"
@@ -98,8 +100,8 @@ function Editor({ text, setText, highlightedText, setHighlightedText }: EditorPr
               suppressContentEditableWarning
             />
           </Panel>
-        </Panel>
-      </PanelGroup>
-    </>
+        </PanelGroup>
+      </Panel>
+    </PanelGroup>
   );
 }
