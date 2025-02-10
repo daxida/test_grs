@@ -50,7 +50,7 @@
     <button onclick="highlightErrors()">Highlight Errors</button>
     
     <script type="module">
-        import init, { scan_text } from "./pkg/test_grs.js"; // Load WebAssembly module
+        import init, { scan_text } from "./pkg/grs_wasm.js"; // Load WebAssembly module
 
         async function run() {
             await init(); // Initialize WASM
