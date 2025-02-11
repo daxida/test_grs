@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 import init, { scan_text } from './../pkg/grs_wasm.js'
@@ -7,21 +7,53 @@ import { DEFAULT_PROMPT } from './constants.js';
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { useTheme } from './theme.js';
 
+export interface Source {
+  text: string;
+  settings: string;
+}
+
 export default function App() {
   const initPromise = useRef<null | Promise<void>>(null);
-  const [text, setText] = useState(DEFAULT_PROMPT);
+  const [text, setText] = useState<null | string>(null);
+  const [settings, setSettings] = useState<null | string>(null);
+
   const [theme, setTheme] = useTheme();
 
   if (initPromise.current == null) {
     initPromise.current = startApp()
       .then(({ text, settings }) => {
-        setText(text);
-        highlightErrors(text, setText);
+        setText(highlightErrors(text));
+        setSettings(settings);
       })
       .catch((error) => {
         console.error("Failed to initialize playground.", error);
       });
   }
+
+  const handleSourceChanged = useCallback(
+    (text: string) => {
+      setText(text);
+    },
+    [],
+  );
+
+  const handleSettingsChanged = useCallback(
+    (settings: string) => {
+      setSettings(settings);
+    },
+    [],
+  );
+
+  const source: Source | null = useMemo(() => {
+    if (text == null || settings == null) {
+      return null;
+    }
+
+    return { text, settings };
+  }, [text, settings]);
+
+  // console.log("Text is " + text);
+  // console.log("Settings are " + settings);
 
   return (
     <main className="flex flex-col h-full bg-ayu-background dark:bg-ayu-background-dark text-gray-900 dark:text-white">
@@ -31,10 +63,12 @@ export default function App() {
       />
 
       <div className="flex flex-grow">
-        <Editor
-          text={text}
+        {source != null && (<Editor
+          source={source}
           setText={setText}
-        />
+          onSettingsChanged={handleSettingsChanged}
+          onSourceChanged={handleSourceChanged}
+        />)}
       </div>
     </main>
   );
@@ -51,7 +85,7 @@ async function startApp(): Promise<{
   };
 }
 
-function highlightErrors(text: string, setText: (text: string) => void) {
+function highlightErrors(text: string) {
   const diagnostics = scan_text(text);
   diagnostics.sort((a, b) => a.start - b.start);
 
@@ -66,15 +100,22 @@ function highlightErrors(text: string, setText: (text: string) => void) {
   }
 
   newText += text.substring(lastIndex);
-  setText(newText.replace(/\n/g, "<br>"));
+  return newText.replace(/\n/g, "<br>");
 };
 
 interface EditorProps {
-  text: string;
+  source: Source;
   setText: (text: string) => void;
+
+  onSourceChanged(source: string): void;
+  onSettingsChanged(settings: string): void;
 }
 
-function Editor({ text, setText }: EditorProps) {
+function Editor({ source, setText, onSourceChanged, onSettingsChanged }: EditorProps) {
+  // Does nothing: just testing
+  onSourceChanged("")
+  onSettingsChanged("")
+
   return (
     <PanelGroup direction="horizontal" autoSaveId="main">
 
@@ -85,8 +126,8 @@ function Editor({ text, setText }: EditorProps) {
             className="editor"
             contentEditable
             suppressContentEditableWarning
-            onBlur={(e) => highlightErrors(e.target.innerText, setText)}
-            dangerouslySetInnerHTML={{ __html: text || text.replace(/\n/g, "<br>") }}
+            onBlur={(e) => setText(highlightErrors(e.target.innerText))}
+            dangerouslySetInnerHTML={{ __html: source.text || source.text.replace(/\n/g, "<br>") }}
           />
           <Panel
             id="diagnostics"
