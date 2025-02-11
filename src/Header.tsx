@@ -47,7 +47,6 @@ function ThemeButton({
   theme: Theme;
   onChangeTheme: (theme: Theme) => void;
 }) {
-  console.log(theme)
   return (
     <button
       onClick={() => onChangeTheme(theme === "light" ? "dark" : "light")}
