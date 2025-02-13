@@ -138,7 +138,7 @@ function SourceEditor({
         fixedOverflowWidgets: true,
         readOnly: false,
         minimap: { enabled: false },
-        fontSize: 20,
+        fontSize: 16,
         roundedSelection: false,
         scrollBeyondLastLine: false,
         contextmenu: true,
@@ -170,15 +170,15 @@ function updateMarkers(monaco: Monaco, diagnostics: Array<Diagnostic>) {
     model,
     "owner",
     diagnostics.map((diagnostic) => {
-      const start = model.getPositionAt(diagnostic.start);
-      const end = model.getPositionAt(diagnostic.end);
+      const start = model.getPositionAt(diagnostic.range.start);
+      const end = model.getPositionAt(diagnostic.range.end);
       return (
         {
           startLineNumber: start.lineNumber,
           startColumn: start.column,
           endLineNumber: end.lineNumber,
           endColumn: end.column,
-          message: JSON.stringify(diagnostic),
+          message: JSON.stringify(diagnostic, null, 2),
           severity: MarkerSeverity.Error,
         })
     }),

@@ -1,14 +1,14 @@
+use grs::diagnostic::{Diagnostic, Fix};
 use grs::linter::check;
 use grs::registry::Rule;
+use serde::{Deserialize, Serialize};
+use std::ops::Range;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
-use web_sys::js_sys::{Array, Object, Reflect};
+use web_sys::js_sys::Error;
 
 // TODO: Very unefficient
-fn byte_range_to_char_range(
-    text: &str,
-    byte_range: std::ops::Range<usize>,
-) -> std::ops::Range<usize> {
+fn byte_range_to_char_range(text: &str, byte_range: Range<usize>) -> Range<usize> {
     let mut char_start = None;
     let mut char_end = None;
 
@@ -28,37 +28,59 @@ fn byte_range_to_char_range(
     }
 }
 
-#[wasm_bindgen]
-pub fn scan_text(text: &str) -> Array {
-    let config = vec![
-        Rule::MissingDoubleAccents,
-        Rule::AmbiguousChar,
-        Rule::OutdatedSpelling,
-    ];
-    let diagnostics = check(text, &config);
-    let diagnostics_js = Array::new();
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DiagnosticJs {
+    pub kind: String,
+    pub range: Range<usize>,
+    // Only the replacement at the moment.
+    pub fix: Option<String>,
+}
 
-    for diagnostic in diagnostics {
-        if let Some(fix) = diagnostic.fix {
-            let kind = JsValue::from(diagnostic.kind.to_string());
-            let replacement = JsValue::from(fix.replacement);
+fn to_fixjs(fix: &Option<Fix>) -> Option<String> {
+    // The trim is hacky...
+    fix.as_ref().map(|fix| fix.replacement.trim().to_string())
+}
 
-            let byte_range = fix.range.start()..fix.range.end();
-            let char_range = byte_range_to_char_range(text, byte_range);
-            let start = JsValue::from(char_range.start);
-            let end = JsValue::from(char_range.end);
+impl DiagnosticJs {
+    fn new(text: &str, diagnostic: &Diagnostic) -> Self {
+        let byte_range = diagnostic.range.start()..diagnostic.range.end();
+        let char_range = byte_range_to_char_range(text, byte_range);
+        let start = char_range.start;
+        let end = char_range.end;
 
-            let diagnostic_js = Object::new();
-            Reflect::set(&diagnostic_js, &JsValue::from("kind"), &kind).unwrap();
-            Reflect::set(&diagnostic_js, &JsValue::from("replacement"), &replacement).unwrap();
-            Reflect::set(&diagnostic_js, &JsValue::from("start"), &start).unwrap();
-            Reflect::set(&diagnostic_js, &JsValue::from("end"), &end).unwrap();
-
-            diagnostics_js.push(&diagnostic_js);
+        Self {
+            kind: diagnostic.kind.to_string(),
+            range: start..end,
+            fix: to_fixjs(&diagnostic.fix),
         }
     }
+}
 
-    diagnostics_js
+#[wasm_bindgen]
+pub fn scan_text(text: &str) -> Result<JsValue, Error> {
+    let config = vec![
+        Rule::MissingDoubleAccents,
+        Rule::MissingAccentCapital,
+        Rule::DuplicatedWord,
+        Rule::AddFinalN,
+        Rule::RemoveFinalN,
+        Rule::OutdatedSpelling,
+        Rule::MonosyllableAccented,
+        Rule::MultisyllableNotAccented,
+        Rule::MixedScripts,
+        Rule::AmbiguousChar,
+    ];
+
+    let diagnostics_js = check(text, &config)
+        .iter()
+        .map(|diagnostic| DiagnosticJs::new(text, diagnostic))
+        .collect::<Vec<_>>();
+
+    serde_wasm_bindgen::to_value(&diagnostics_js).map_err(into_error)
+}
+
+pub(crate) fn into_error<E: std::fmt::Display>(err: E) -> Error {
+    Error::new(&err.to_string())
 }
 
 #[cfg(test)]

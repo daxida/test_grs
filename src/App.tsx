@@ -9,10 +9,12 @@ import { default as Editor, Source } from './Editor.tsx';
 
 // This should go to grs_wasm
 export interface Diagnostic {
-  start: number,
-  end: number,
-  replacement: string,
-  kind: string,
+  kind: string;
+  range: {
+    start: number;
+    end: number;
+  };
+  fix: string;
 }
 
 export default function App() {
