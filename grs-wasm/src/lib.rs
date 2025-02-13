@@ -22,9 +22,18 @@ fn byte_range_to_char_range(text: &str, byte_range: Range<usize>) -> Range<usize
         }
     }
 
+    // Cf. only a multisyllable non accented as input: καλη
+    // (in that case we would reach EOF before assigning char_end)
+    if char_end.is_none() {
+        char_end = Some(text.chars().count());
+    }
+
     match (char_start, char_end) {
         (Some(start), Some(end)) => start..end,
-        _ => panic!(),
+        _ => {
+            web_sys::console::log_1(&"Warning: Invalid range, using default 0..0".into());
+            0..0
+        }
     }
 }
 
