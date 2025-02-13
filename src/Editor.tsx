@@ -1,9 +1,15 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Panel, PanelGroup } from "react-resizable-panels";
-import { scan_text } from './../pkg/grs_wasm.js'
-import { Diagnostic } from './App.tsx';
-import { Theme } from './theme.js';
+import { scan_text, tokenize } from './../pkg/grs_wasm'
+import { Diagnostic, Token } from './App';
+import { Theme } from './theme';
 import PrimarySideBar from "./PrimarySideBar";
+import SecondarySideBar from "./SecondarySideBar";
+import SecondaryPanel, {
+  SecondaryPanelResult,
+  SecondaryTool,
+} from "./SecondaryPanel";
+import { HorizontalResizeHandle } from "./ResizeHandle";
 
 type Tab = "Source" | "Settings";
 
@@ -23,6 +29,32 @@ interface EditorProps {
 export default function Editor({ source, theme, onSourceChanged, onSettingsChanged }: EditorProps) {
   const editorRef = useRef<IStandaloneCodeEditor | null>(null);
   const [tab, setTab] = useState<Tab>("Source");
+  const [secondaryTool, setSecondaryTool] = useState<SecondaryTool | null>(
+    () => {
+      const secondaryValue = new URLSearchParams(location.search).get("secondary");
+      // .prototype.hasOwnProperty.call ~~ hasOwn
+      return secondaryValue && Object.prototype.hasOwnProperty.call(SecondaryTool, secondaryValue)
+        ? (secondaryValue as SecondaryTool)
+        : null;
+    },
+  );
+  const handleSecondaryToolSelected = (tool: SecondaryTool | null) => {
+    if (tool === secondaryTool) {
+      tool = null;
+    }
+
+    const url = new URL(location.href);
+
+    if (tool == null) {
+      url.searchParams.delete("secondary");
+    } else {
+      url.searchParams.set("secondary", tool);
+    }
+
+    history.replaceState(null, "", url);
+
+    setSecondaryTool(tool);
+  };
 
   const handleSourceEditorMount = useCallback(
     (editor: IStandaloneCodeEditor) => {
@@ -47,6 +79,14 @@ export default function Editor({ source, theme, onSourceChanged, onSettingsChang
   );
 
   const diagnostics = scan_text(source.text);
+  const tokens: Token[] = tokenize(source.text);
+  // const tokens_str = JSON.stringify(tokens, null, 2);
+  const tokens_str = tokens.map(token =>
+    `${JSON.stringify(token.text)}, ${JSON.stringify(token.whitespace)}, ${token.range.start}..${token.range.end}`
+  ).join("\n");
+  const result: SecondaryPanelResult = {
+    content: tokens_str,
+  };
 
   return (
     <PanelGroup direction="horizontal" autoSaveId="main">
@@ -70,6 +110,29 @@ export default function Editor({ source, theme, onSourceChanged, onSettingsChang
           />
         </PanelGroup>
       </Panel>
+
+      {secondaryTool != null && (
+        <>
+          <HorizontalResizeHandle />
+          <Panel
+            id="secondary-panel"
+            order={1}
+            className={"my-2"}
+            minSize={10}
+          >
+            <SecondaryPanel
+              theme={theme}
+              tool={secondaryTool}
+              result={result}
+            />
+          </Panel>
+        </>
+      )}
+
+      <SecondarySideBar
+        selected={secondaryTool}
+        onSelected={handleSecondaryToolSelected}
+      />
     </PanelGroup>
   );
 }

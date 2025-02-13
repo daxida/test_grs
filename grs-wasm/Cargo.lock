@@ -152,6 +152,7 @@ dependencies = [
  "colored",
  "grac",
  "itertools",
+ "serde",
  "similar",
  "strum",
  "strum_macros",

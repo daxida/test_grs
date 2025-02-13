@@ -88,6 +88,12 @@ pub fn scan_text(text: &str) -> Result<JsValue, Error> {
     serde_wasm_bindgen::to_value(&diagnostics_js).map_err(into_error)
 }
 
+#[wasm_bindgen]
+pub fn tokenize(text: &str) -> Result<JsValue, Error> {
+    let tokens = grs::tokenizer::tokenize(text);
+    serde_wasm_bindgen::to_value(&tokens).map_err(into_error)
+}
+
 pub(crate) fn into_error<E: std::fmt::Display>(err: E) -> Error {
     Error::new(&err.to_string())
 }
