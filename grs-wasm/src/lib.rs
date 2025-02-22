@@ -50,6 +50,21 @@ fn to_fixjs(fix: &Option<Fix>) -> Option<String> {
     fix.as_ref().map(|fix| fix.replacement.trim().to_string())
 }
 
+fn pascal_to_snake(s: &str) -> String {
+    let mut snake_case = String::new();
+    for (i, c) in s.chars().enumerate() {
+        if c.is_uppercase() {
+            if i != 0 {
+                snake_case.push('_');
+            }
+            snake_case.push(c.to_ascii_lowercase());
+        } else {
+            snake_case.push(c);
+        }
+    }
+    snake_case
+}
+
 impl DiagnosticJs {
     fn new(text: &str, diagnostic: &Diagnostic) -> Self {
         let byte_range = diagnostic.range.start()..diagnostic.range.end();
@@ -57,8 +72,11 @@ impl DiagnosticJs {
         let start = char_range.start;
         let end = char_range.end;
 
+        let pascal_case_rule = format!("{:?}", diagnostic.kind);
+        let kind = pascal_to_snake(&pascal_case_rule);
+
         Self {
-            kind: diagnostic.kind.to_string(),
+            kind,
             range: start..end,
             fix: to_fixjs(&diagnostic.fix),
         }
