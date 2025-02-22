@@ -5,7 +5,7 @@ import init from './../pkg/grs_wasm.js'
 import Header from "./Header";
 import { DEFAULT_PROMPT } from './constants.js';
 import { useTheme } from './theme.js';
-import { default as Editor, Source } from './Editor.tsx';
+import { default as Editor } from './Editor.tsx';
 
 // This should be exported by grs_wasm
 export interface Diagnostic {
@@ -30,6 +30,10 @@ export interface Token {
   greek: boolean,
 }
 
+export interface Source {
+  text: string;
+  settings: string;
+}
 
 export default function App() {
   console.log("App");
@@ -74,8 +78,10 @@ export default function App() {
   return (
     <main className="flex flex-col h-full bg-ayu-background dark:bg-ayu-background-dark text-gray-900 dark:text-white">
       <Header
+        source={source}
         theme={theme}
         onChangeTheme={setTheme}
+        onSourceChanged={handleSourceChanged}
       />
 
       <div className="flex flex-grow">

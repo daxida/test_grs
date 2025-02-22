@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { scan_text, tokenize } from './../pkg/grs_wasm'
-import { Diagnostic, Token } from './App';
+import { Diagnostic, Source, Token } from './App';
 import { Theme } from './theme';
 import PrimarySideBar from "./PrimarySideBar";
 import SecondarySideBar from "./SecondarySideBar";
@@ -12,11 +12,6 @@ import SecondaryPanel, {
 import { HorizontalResizeHandle } from "./ResizeHandle";
 
 type Tab = "Source" | "Settings";
-
-export interface Source {
-  text: string;
-  settings: string;
-}
 
 interface EditorProps {
   source: Source;

@@ -112,7 +112,12 @@ pub fn tokenize(text: &str) -> Result<JsValue, Error> {
     serde_wasm_bindgen::to_value(&tokens).map_err(into_error)
 }
 
-pub(crate) fn into_error<E: std::fmt::Display>(err: E) -> Error {
+#[wasm_bindgen]
+pub fn to_monotonic(text: &str) -> String {
+    grac::to_mono(text)
+}
+
+fn into_error<E: std::fmt::Display>(err: E) -> Error {
     Error::new(&err.to_string())
 }
 

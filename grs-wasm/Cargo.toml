@@ -7,7 +7,8 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-grs = { path = "../../grs", features = ["serde"] }
+grac = { git = "https://github.com/daxida/grac" }
+grs = { git = "https://github.com/daxida/grs", features = ["serde"] }
 serde = "1.0.217"
 serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = "0.2"
