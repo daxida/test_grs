@@ -137,7 +137,7 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 [[package]]
 name = "grac"
 version = "0.1.0"
-source = "git+https://github.com/daxida/grac#daefac68d7bdfd114848f3ec82b702bad13b385d"
+source = "git+https://github.com/daxida/grac#fb22fe62752dbd3a758ab2351eee2607f402f098"
 dependencies = [
  "aho-corasick",
  "phf",
@@ -147,7 +147,7 @@ dependencies = [
 [[package]]
 name = "grs"
 version = "0.1.0"
-source = "git+https://github.com/daxida/grs#bea1664b02ae6cbc369a3bc36783ea16660c5322"
+source = "git+https://github.com/daxida/grs#903588b4f1a558966586a698702fb9af26227ff0"
 dependencies = [
  "clap",
  "colored",

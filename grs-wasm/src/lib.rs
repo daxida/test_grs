@@ -114,7 +114,7 @@ pub fn tokenize(text: &str) -> Result<JsValue, Error> {
 
 #[wasm_bindgen]
 pub fn to_monotonic(text: &str) -> String {
-    grac::to_mono(text)
+    grac::to_monotonic(text)
 }
 
 fn into_error<E: std::fmt::Display>(err: E) -> Error {
