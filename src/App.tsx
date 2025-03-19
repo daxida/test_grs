@@ -7,28 +7,6 @@ import { DEFAULT_PROMPT } from './constants.js';
 import { useTheme } from './theme.js';
 import { default as Editor } from './Editor.tsx';
 
-// This should be exported by grs_wasm
-export interface Diagnostic {
-  kind: string;
-  range: {
-    start: number;
-    end: number;
-  };
-  fix: string;
-}
-
-// This should be exported by grs_wasm
-export interface Token {
-  text: string,
-  whitespace: string,
-  index: number,
-  range: {
-    start: number,
-    end: number,
-  }
-  punct: boolean,
-  greek: boolean,
-}
 
 export interface Source {
   text: string;

@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Panel, PanelGroup } from "react-resizable-panels";
-import { scan_text, tokenize } from './../pkg/grs_wasm'
-import { Diagnostic, Source, Token } from './App';
+import { Diagnostic, Token, scan_text, tokenize } from './../pkg/grs_wasm'
+import { Source } from './App';
 import { Theme } from './theme';
 import PrimarySideBar from "./PrimarySideBar";
 import SecondarySideBar from "./SecondarySideBar";

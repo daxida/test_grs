@@ -7,6 +7,29 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 use web_sys::js_sys::Error;
 
+#[wasm_bindgen(typescript_custom_section)]
+const TYPES: &'static str = r#"
+export interface Diagnostic {
+  kind: string;
+  range: {
+    start: number;
+    end: number;
+  };
+  fix: string;
+};
+
+export interface Token {
+  text: string,
+  whitespace: string,
+  index: number,
+  range: {
+    start: number,
+    end: number,
+  }
+  punct: boolean,
+  greek: boolean,
+}"#;
+
 // TODO: Very unefficient
 fn byte_range_to_char_range(text: &str, byte_range: Range<usize>) -> Range<usize> {
     let mut char_start = None;
