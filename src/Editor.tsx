@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Panel, PanelGroup } from "react-resizable-panels";
-import { Diagnostic, Token, scan_text, tokenize } from './../pkg/grs_wasm'
+import { Diagnostic, Token, scan_text, tokenize, syllabify } from './../pkg/grs_wasm'
 import { Source } from './App';
 import { Theme } from './theme';
 import PrimarySideBar from "./PrimarySideBar";
@@ -230,6 +230,17 @@ function SourceEditor({
   );
 }
 
+
+interface ExpandedDiagnostic extends Diagnostic {
+  syllables?: string;
+}
+
+const ACCENT_RELATED_DIAGNOSTIC_KINDS = [
+  "missing_double_accents",
+  "multisyllable_not_accented",
+  // monosyllable is redundant, since we already know the syllabification
+];
+
 function updateMarkers(monaco: Monaco, diagnostics: Array<Diagnostic>) {
   const editor = monaco.editor;
   const model = editor?.getModels()[0];
@@ -244,6 +255,22 @@ function updateMarkers(monaco: Monaco, diagnostics: Array<Diagnostic>) {
     diagnostics.map((diagnostic) => {
       const start = model.getPositionAt(diagnostic.range.start);
       const end = model.getPositionAt(diagnostic.range.end);
+
+      // For accent related diagnostics, add the syllabification on hover
+      const expandedDiagnostic: ExpandedDiagnostic = diagnostic;
+      if (ACCENT_RELATED_DIAGNOSTIC_KINDS.includes(diagnostic.kind)) {
+        // Get back the word from the diagnostic
+        const range = new monaco.Range(
+          start.lineNumber,
+          start.column,
+          end.lineNumber,
+          end.column
+        );
+        const word = model.getValueInRange(range);
+
+        expandedDiagnostic.syllables = syllabify(word, "-");
+      }
+
       return (
         {
           startLineNumber: start.lineNumber,

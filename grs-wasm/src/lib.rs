@@ -161,9 +161,16 @@ pub fn tokenize(text: &str) -> Result<JsValue, Error> {
     serde_wasm_bindgen::to_value(&tokens).map_err(into_error)
 }
 
+// Grac bindings
+
 #[wasm_bindgen]
 pub fn to_monotonic(text: &str) -> String {
     grac::to_monotonic(text)
+}
+
+#[wasm_bindgen]
+pub fn syllabify(text: &str, separator: &str) -> String {
+    grac::syllabify_el(text).join(separator)
 }
 
 fn into_error<E: std::fmt::Display>(err: E) -> Error {
