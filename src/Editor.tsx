@@ -230,16 +230,35 @@ function SourceEditor({
   );
 }
 
-
-interface ExpandedDiagnostic extends Diagnostic {
+interface ExpandedDiagnostic {
+  kind: string;
+  range: string;
+  fix: string;
   syllables?: string;
-}
+};
 
 const ACCENT_RELATED_DIAGNOSTIC_KINDS = [
   "missing_double_accents",
   "multisyllable_not_accented",
   // monosyllable is redundant, since we already know the syllabification
 ];
+
+// Does two things on a diagnostic:
+// * Replace the range attribute with a more compact string
+// * For accent related diagnostics, add the syllabification on hover
+function toExpandedDiagnostic(diagnostic: Diagnostic, word: string): ExpandedDiagnostic {
+  const expandedDiagnostic: ExpandedDiagnostic = {
+    kind: diagnostic.kind,
+    range: `${diagnostic.range.start}..${diagnostic.range.end}`,
+    fix: diagnostic.fix,
+  };
+
+  if (ACCENT_RELATED_DIAGNOSTIC_KINDS.includes(diagnostic.kind)) {
+    expandedDiagnostic.syllables = syllabify(word, "-");
+  }
+
+  return expandedDiagnostic
+}
 
 function updateMarkers(monaco: Monaco, diagnostics: Array<Diagnostic>) {
   const editor = monaco.editor;
@@ -256,20 +275,16 @@ function updateMarkers(monaco: Monaco, diagnostics: Array<Diagnostic>) {
       const start = model.getPositionAt(diagnostic.range.start);
       const end = model.getPositionAt(diagnostic.range.end);
 
-      // For accent related diagnostics, add the syllabification on hover
-      const expandedDiagnostic: ExpandedDiagnostic = diagnostic;
-      if (ACCENT_RELATED_DIAGNOSTIC_KINDS.includes(diagnostic.kind)) {
-        // Get back the word from the diagnostic
-        const range = new monaco.Range(
-          start.lineNumber,
-          start.column,
-          end.lineNumber,
-          end.column
-        );
-        const word = model.getValueInRange(range);
+      // Get back the word from the diagnostic
+      const range = new monaco.Range(
+        start.lineNumber,
+        start.column,
+        end.lineNumber,
+        end.column
+      );
+      const word = model.getValueInRange(range);
 
-        expandedDiagnostic.syllables = syllabify(word, "-");
-      }
+      const expandedDiagnostic = toExpandedDiagnostic(diagnostic, word);
 
       return (
         {
@@ -277,7 +292,7 @@ function updateMarkers(monaco: Monaco, diagnostics: Array<Diagnostic>) {
           startColumn: start.column,
           endLineNumber: end.lineNumber,
           endColumn: end.column,
-          message: JSON.stringify(diagnostic, null, 2),
+          message: JSON.stringify(expandedDiagnostic, null, 2),
           severity: MarkerSeverity.Error,
         })
     }),
