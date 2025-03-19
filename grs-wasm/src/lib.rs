@@ -1,5 +1,4 @@
 use grs::diagnostic::{Diagnostic, Fix};
-use grs::linter::check;
 use grs::registry::{code_to_rule, Rule};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -126,11 +125,8 @@ struct Options {
     rules: Vec<String>,
 }
 
-// Reference:
-// https://rustwasm.github.io/docs/wasm-bindgen/reference/arbitrary-data-with-serde.html
-#[wasm_bindgen]
-pub fn scan_text(text: &str, options: JsValue) -> Result<JsValue, Error> {
-    let conf: Vec<Rule> = if options.is_null() || options.is_undefined() {
+fn load_config(options: JsValue) -> Vec<Rule> {
+    if options.is_null() || options.is_undefined() {
         ALL_RULES.to_vec()
     } else {
         // options is expected to be: { "MDA": true, "AC": true, ... }
@@ -145,14 +141,26 @@ pub fn scan_text(text: &str, options: JsValue) -> Result<JsValue, Error> {
 
         // Ignore keys that do not match any rule
         codes.iter().filter_map(|code| code_to_rule(code)).collect()
-    };
+    }
+}
 
-    let diagnostics_js = check(text, &conf.as_slice())
+// Reference:
+// https://rustwasm.github.io/docs/wasm-bindgen/reference/arbitrary-data-with-serde.html
+#[wasm_bindgen]
+pub fn scan_text(text: &str, options: JsValue) -> Result<JsValue, Error> {
+    let config = load_config(options);
+    let diagnostics_js = grs::linter::check(text, &config.as_slice())
         .iter()
         .map(|diagnostic| DiagnosticJs::new(text, diagnostic))
         .collect::<Vec<_>>();
-
     serde_wasm_bindgen::to_value(&diagnostics_js).map_err(into_error)
+}
+
+#[wasm_bindgen]
+pub fn fix(text: &str, options: JsValue) -> String {
+    let config = load_config(options);
+    let (res, _, _) = grs::linter::fix(text, &config);
+    res
 }
 
 #[wasm_bindgen]
