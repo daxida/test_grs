@@ -1,7 +1,8 @@
 use grs::diagnostic::{Diagnostic, Fix};
 use grs::linter::check;
-use grs::registry::Rule;
+use grs::registry::{code_to_rule, Rule};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::ops::Range;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
@@ -60,14 +61,6 @@ fn byte_range_to_char_range(text: &str, byte_range: Range<usize>) -> Range<usize
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct DiagnosticJs {
-    pub kind: String,
-    pub range: Range<usize>,
-    // Only the replacement at the moment.
-    pub fix: Option<String>,
-}
-
 fn to_fixjs(fix: &Option<Fix>) -> Option<String> {
     // The trim is hacky...
     fix.as_ref().map(|fix| fix.replacement.trim().to_string())
@@ -88,6 +81,14 @@ fn pascal_to_snake(s: &str) -> String {
     snake_case
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DiagnosticJs {
+    pub kind: String,
+    pub range: Range<usize>,
+    // Only the replacement at the moment.
+    pub fix: Option<String>,
+}
+
 impl DiagnosticJs {
     fn new(text: &str, diagnostic: &Diagnostic) -> Self {
         let byte_range = diagnostic.range.start()..diagnostic.range.end();
@@ -106,22 +107,47 @@ impl DiagnosticJs {
     }
 }
 
-#[wasm_bindgen]
-pub fn scan_text(text: &str) -> Result<JsValue, Error> {
-    let config = vec![
-        Rule::MissingDoubleAccents,
-        Rule::MissingAccentCapital,
-        Rule::DuplicatedWord,
-        Rule::AddFinalN,
-        Rule::RemoveFinalN,
-        Rule::OutdatedSpelling,
-        Rule::MonosyllableAccented,
-        Rule::MultisyllableNotAccented,
-        Rule::MixedScripts,
-        Rule::AmbiguousChar,
-    ];
+const ALL_RULES: [Rule; 10] = [
+    Rule::MissingDoubleAccents,
+    Rule::MissingAccentCapital,
+    Rule::DuplicatedWord,
+    Rule::AddFinalN,
+    Rule::RemoveFinalN,
+    Rule::OutdatedSpelling,
+    Rule::MonosyllableAccented,
+    Rule::MultisyllableNotAccented,
+    Rule::MixedScripts,
+    Rule::AmbiguousChar,
+];
 
-    let diagnostics_js = check(text, &config)
+// Proxy of Config (i.e. Vec<Rule>) to be passed between rust and js.
+#[derive(Serialize, Deserialize)]
+struct Options {
+    rules: Vec<String>,
+}
+
+// Reference:
+// https://rustwasm.github.io/docs/wasm-bindgen/reference/arbitrary-data-with-serde.html
+#[wasm_bindgen]
+pub fn scan_text(text: &str, options: JsValue) -> Result<JsValue, Error> {
+    let conf: Vec<Rule> = if options.is_null() || options.is_undefined() {
+        ALL_RULES.to_vec()
+    } else {
+        // options is expected to be: { "MDA": true, "AC": true, ... }
+        let options_map: HashMap<String, bool> =
+            serde_wasm_bindgen::from_value(options).unwrap_or_default();
+
+        // Extract keys where value is true
+        let codes: Vec<String> = options_map
+            .into_iter()
+            .filter_map(|(key, value)| if value { Some(key) } else { None })
+            .collect();
+
+        // Ignore keys that do not match any rule
+        codes.iter().filter_map(|code| code_to_rule(code)).collect()
+    };
+
+    let diagnostics_js = check(text, &conf.as_slice())
         .iter()
         .map(|diagnostic| DiagnosticJs::new(text, diagnostic))
         .collect::<Vec<_>>();

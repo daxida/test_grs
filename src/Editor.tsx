@@ -21,7 +21,12 @@ interface EditorProps {
   onSettingsChanged(settings: string): void;
 }
 
-export default function Editor({ source, theme, onSourceChanged, onSettingsChanged }: EditorProps) {
+export default function Editor({
+  source,
+  theme,
+  onSourceChanged,
+  onSettingsChanged
+}: EditorProps) {
   const editorRef = useRef<IStandaloneCodeEditor | null>(null);
   const [tab, setTab] = useState<Tab>("Source");
   const [secondaryTool, setSecondaryTool] = useState<SecondaryTool | null>(
@@ -73,7 +78,16 @@ export default function Editor({ source, theme, onSourceChanged, onSettingsChang
     [],
   );
 
-  const diagnostics = scan_text(source.text);
+  // Settings
+  const { settings } = source;
+  let config;
+  try {
+    config = JSON.parse(settings);
+  } catch {
+    config = {};
+  }
+
+  const diagnostics = scan_text(source.text, config);
   const tokens: Token[] = tokenize(source.text);
   // const tokens_str = JSON.stringify(tokens, null, 2);
   const tokens_str = tokens.map(token =>

@@ -74,6 +74,20 @@ export default function App() {
   );
 }
 
+const ALL_RULES = [
+  "MDA", // MissingDoubleAccents
+  "MAC", // MissingAccentCapital
+  "DW",  // DuplicatedWord
+  "AFN", // AddFinalN
+  "RFN", // RemoveFinalN
+  "OS",  // OutdatedSpelling
+  "MA",  // MonosyllableAccented
+  "MNA", // MultisyllableNotAccented
+  "MS",  // MixedScripts
+  "AC",  // AmbiguousChar
+];
+const defaultSettings = Object.fromEntries(ALL_RULES.map(rule => [rule, true]));
+
 async function startApp(): Promise<{
   text: string;
   settings: string;
@@ -81,7 +95,7 @@ async function startApp(): Promise<{
   await init(); // Init wasm
   return {
     text: DEFAULT_PROMPT,
-    settings: "Default settings FILLER"
+    settings: JSON.stringify(defaultSettings, null, 2),
   };
 }
 
